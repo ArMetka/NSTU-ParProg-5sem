@@ -9,6 +9,7 @@
         "__tuple": "cpp",
         "functional": "cpp",
         "__locale": "cpp",
-        "opencl.h": "c"
+        "opencl.h": "c",
+        "numbers": "c"
     }
 }
