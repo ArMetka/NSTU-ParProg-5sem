@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "omp.h": "c",
+        "time.h": "c",
+        "stdlib.h": "c",
+        "stdlib-bsearch.h": "c",
+        "array": "cpp",
+        "__tuple": "cpp",
+        "functional": "cpp",
+        "__locale": "cpp"
+    }
+}
