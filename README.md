@@ -13,18 +13,18 @@ make
 
 #### NVIDIA CUDA
 
-> requires NVIDIA Video Card with [Compute Capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported):
+> requires NVIDIA GPU with [Compute Capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported):
 
 - \>= 3.5 for recursive algorithm (Dynamic parallelism)
 
 ```bash
-cd lab1
+cd lab2
 make recursive
 ```
 
-- \>= 2.0 for iterative algorithm
+- \>= 2.0 for iterative algorithm (Slower than sequential)
 
 ```bash
-cd lab1
+cd lab2
 make
 ```

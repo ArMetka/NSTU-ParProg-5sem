@@ -8,6 +8,7 @@
         "array": "cpp",
         "__tuple": "cpp",
         "functional": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "opencl.h": "c"
     }
 }
