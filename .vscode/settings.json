@@ -10,6 +10,8 @@
         "functional": "cpp",
         "__locale": "cpp",
         "opencl.h": "c",
-        "numbers": "c"
+        "numbers": "c",
+        "stdio.h": "c",
+        "*.cl": "cpp"
     }
 }

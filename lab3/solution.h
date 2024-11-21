@@ -20,7 +20,17 @@ void find_primes(uint64 **primes, uint64 max_number, uint64 *primes_count);
 /**
  * Find answer sequentially
  */
-void find_sequential(uint64 *primes, uint64 primes_count, uint64 *answer, uint64 *answer_offset, uint64 *answer_len);
+struct timespec find_sequential(uint64 *primes, uint64 primes_count, uint64 *answer, uint64 *answer_offset, uint64 *answer_len);
+
+/**
+ * Find answer in parallel
+ */
+struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answer, uint64 *answer_offset, uint64 *answer_len, cl_device_id device);
+
+/**
+ * Read program from file
+ */
+int load_program(char **program_source, size_t *program_len);
 
 /**
  * Interpret and print answer
