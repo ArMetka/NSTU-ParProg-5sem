@@ -12,6 +12,8 @@
         "opencl.h": "c",
         "numbers": "c",
         "stdio.h": "c",
-        "*.cl": "cpp"
+        "*.cl": "cpp",
+        "thread": "cpp",
+        "locale": "cpp"
     }
 }

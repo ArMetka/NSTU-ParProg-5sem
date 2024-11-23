@@ -46,19 +46,12 @@ int main(int argc, char **argv) {
 }
 
 struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answer, uint64 *answer_offset, uint64 *answer_len, cl_device_id device) {
+
     // Create Context
     cl_int context_result;
     cl_context context = clCreateContext(NULL, 1, &device, NULL, NULL, &context_result);
     if (context_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to create context, error code = %d\n", context_result);
-        exit(1);
-    }
-
-    // Create Command Queue
-    cl_int command_queue_result;
-    cl_command_queue queue = clCreateCommandQueue(context, device, 0, &command_queue_result);
-    if (command_queue_result != CL_SUCCESS) {
-        printf("[ERROR]: Failed to create command queue, error code = %d\n", command_queue_result);
         exit(1);
     }
 
@@ -147,34 +140,42 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
 
     // Set Kernel Arguments
     cl_int set_kernel_arg_result;
-    set_kernel_arg_result = clSetKernelArg(kernel, 0, sizeof(cl_mem), lock_buf);
+    set_kernel_arg_result = clSetKernelArg(kernel, 0, sizeof(cl_mem), &lock_buf);
     if (set_kernel_arg_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to set kernel argument lock_buf, error code = %d\n", set_kernel_arg_result);
         exit(1);
     }
-    set_kernel_arg_result = clSetKernelArg(kernel, 1, sizeof(cl_mem), primes_buf);
+    set_kernel_arg_result = clSetKernelArg(kernel, 1, sizeof(cl_mem), &primes_buf);
     if (set_kernel_arg_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to set kernel argument primes_buf, error code = %d\n", set_kernel_arg_result);
         exit(1);
     }
-    set_kernel_arg_result = clSetKernelArg(kernel, 2, sizeof(cl_mem), primes_count_buf);
+    set_kernel_arg_result = clSetKernelArg(kernel, 2, sizeof(cl_mem), &primes_count_buf);
     if (set_kernel_arg_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to set kernel argument primes_count_buf, error code = %d\n", set_kernel_arg_result);
         exit(1);
     }
-    set_kernel_arg_result = clSetKernelArg(kernel, 3, sizeof(cl_mem), answer_buf);
+    set_kernel_arg_result = clSetKernelArg(kernel, 3, sizeof(cl_mem), &answer_buf);
     if (set_kernel_arg_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to set kernel argument answer_buf, error code = %d\n", set_kernel_arg_result);
         exit(1);
     }
-    set_kernel_arg_result = clSetKernelArg(kernel, 4, sizeof(cl_mem), answer_offset_buf);
+    set_kernel_arg_result = clSetKernelArg(kernel, 4, sizeof(cl_mem), &answer_offset_buf);
     if (set_kernel_arg_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to set kernel argument answer_offset_buf, error code = %d\n", set_kernel_arg_result);
         exit(1);
     }
-    set_kernel_arg_result = clSetKernelArg(kernel, 5, sizeof(cl_mem), answer_len_buf);
+    set_kernel_arg_result = clSetKernelArg(kernel, 5, sizeof(cl_mem), &answer_len_buf);
     if (set_kernel_arg_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to set kernel argument answer_len_buf, error code = %d\n", set_kernel_arg_result);
+        exit(1);
+    }
+
+    // Create Command Queue
+    cl_int command_queue_result;
+    cl_command_queue queue = clCreateCommandQueue(context, device, 0, &command_queue_result);
+    if (command_queue_result != CL_SUCCESS) {
+        printf("[ERROR]: Failed to create command queue, error code = %d\n", command_queue_result);
         exit(1);
     }
 
@@ -186,10 +187,16 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
         exit(1);
     }
 
-    // Global work size -> total kernel executions
-    size_t global_work_size = primes_count;
+    // Compute
+    struct timespec start, finish, delta;
+    printf("Computing in parallel...\n");
+    clock_gettime(CLOCK_REALTIME, &start);
+
     // Local work size -> number of simultaneous executions (most likely 1024)
     size_t local_work_size = max_work_group_size;
+    // Global work size -> total kernel executions
+    size_t global_work_size = (primes_count / max_work_group_size + 1) * max_work_group_size;
+
     // Kernel Enqueue
     cl_int enqueue_kernel_result = clEnqueueNDRangeKernel(queue, kernel, 1, 0, &global_work_size, &local_work_size, 0, NULL, NULL);
     if (enqueue_kernel_result != CL_SUCCESS) {
@@ -201,12 +208,10 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
     clEnqueueReadBuffer(queue, answer_buf, CL_TRUE, 0, sizeof(uint64), answer, 0, NULL, NULL);
     clEnqueueReadBuffer(queue, answer_offset_buf, CL_TRUE, 0, sizeof(uint64), answer_offset, 0, NULL, NULL);
     clEnqueueReadBuffer(queue, answer_len_buf, CL_TRUE, 0, sizeof(uint64), answer_len, 0, NULL, NULL);
-
-    // Compute
-    struct timespec start, finish, delta;
-    printf("Computing in parallel...\n");
-    clock_gettime(CLOCK_REALTIME, &start);
+    // printf("%llu, %llu, %llu\n", *answer, *answer_len, *answer_offset);
+ 
     clFinish(queue);
+    
     clock_gettime(CLOCK_REALTIME, &finish);
     delta_timespec(start, finish, &delta);
     return delta;
@@ -304,6 +309,8 @@ cl_device_id get_device() {
             char device_name[128];
             char device_driver[128];
             size_t max_work_group_size;
+            size_t max_constant_buf_size;
+            size_t max_work_item_size[3];
             size_t vendor_name_len;
             size_t device_name_len;
             size_t device_driver_len;
@@ -316,8 +323,14 @@ cl_device_id get_device() {
             if (info_result != CL_SUCCESS) return NULL;
             info_result = clGetDeviceInfo(devices[j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &max_work_group_size, NULL);
             if (info_result != CL_SUCCESS) return NULL;
+            info_result = clGetDeviceInfo(devices[j], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * 3, max_work_item_size, NULL);
+            if (info_result != CL_SUCCESS) return NULL;
+            info_result = clGetDeviceInfo(devices[j], CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(size_t), &max_constant_buf_size, NULL);
+            if (info_result != CL_SUCCESS) return NULL;
 
             printf("\nVendor Name: %s\nDevice Name: %s\nDevice Driver: %s\nMax Work Group Size: %u\n", vendor_name, device_name, device_driver, max_work_group_size);
+            printf("Max Work Item Sizes: %u, %u, %u\n", max_work_item_size[0], max_work_item_size[1], max_work_item_size[2]);
+            printf("Max Constant Buffer Size: %lu\n", max_constant_buf_size);
 
             if (strcmp(vendor_name, "NVIDIA Corporation") == 0) {
                 printf("Appropriate Device Found!\n");
