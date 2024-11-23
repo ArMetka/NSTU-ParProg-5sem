@@ -40,6 +40,9 @@ __kernel void primes_kernel(__global volatile int *lock_buf,
     //     }
     // }
     unsigned long len = get_group_id(0) * 32 + get_local_id(0) + 1;
+    if (len > 256) {
+        return;
+    }
     unsigned long offset = get_group_id(1) * 32 + get_local_id(1);
     if (len >= 2 && offset <= *primes_count_buf - len) {
         unsigned long sum = 0;

@@ -28,3 +28,12 @@ make recursive
 cd lab2
 make
 ```
+
+### Lab 3
+
+#### OpenCL
+
+```bash
+cd lab3
+make
+```

@@ -227,7 +227,7 @@ struct timespec find_sequential(uint64 *primes, uint64 primes_count, uint64 *ans
     printf("Computing sequentially...\n");
     clock_gettime(CLOCK_REALTIME, &start);
 
-    for (uint64 tmp_len = 2; tmp_len < primes_count; tmp_len += 1) {
+    for (uint64 tmp_len = 2; tmp_len < 256; tmp_len += 1) {
         for (uint64 tmp_offset = 0; tmp_offset < primes_count - tmp_len; tmp_offset += 1) {
             uint64 sum = 0;
 
