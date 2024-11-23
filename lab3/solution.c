@@ -192,17 +192,22 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
     printf("Computing in parallel...\n");
     clock_gettime(CLOCK_REALTIME, &start);
 
+    max_work_group_size = 32;
     // Local work size -> number of simultaneous executions (most likely 1024)
-    size_t local_work_size = max_work_group_size;
+    size_t local_work_size[3] = {max_work_group_size, max_work_group_size, 1};
     // Global work size -> total kernel executions
-    size_t global_work_size = (primes_count / max_work_group_size + 1) * max_work_group_size;
+    // size_t global_work_size = (primes_count / max_work_group_size + 1) * max_work_group_size;
+    // [0] -> len: 2 - primes_count, offset: 0 - (primes_count - len)
+    size_t primes_count_aligned = (primes_count / 32 + 1) * 32;
+    size_t global_work_size[3] = {primes_count_aligned, primes_count_aligned, 1};
 
     // Kernel Enqueue
-    cl_int enqueue_kernel_result = clEnqueueNDRangeKernel(queue, kernel, 1, 0, &global_work_size, &local_work_size, 0, NULL, NULL);
+    cl_int enqueue_kernel_result = clEnqueueNDRangeKernel(queue, kernel, 2, 0, global_work_size, local_work_size, 0, NULL, NULL);
     if (enqueue_kernel_result != CL_SUCCESS) {
         printf("[ERROR]: Failed to enqueue kernel, error code = %d\n", enqueue_kernel_result);
         exit(1);
     }
+    clFinish(queue);
 
     // Read Results
     clEnqueueReadBuffer(queue, answer_buf, CL_TRUE, 0, sizeof(uint64), answer, 0, NULL, NULL);
@@ -210,8 +215,7 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
     clEnqueueReadBuffer(queue, answer_len_buf, CL_TRUE, 0, sizeof(uint64), answer_len, 0, NULL, NULL);
     // printf("%llu, %llu, %llu\n", *answer, *answer_len, *answer_offset);
  
-    clFinish(queue);
-    
+
     clock_gettime(CLOCK_REALTIME, &finish);
     delta_timespec(start, finish, &delta);
     return delta;
@@ -331,7 +335,7 @@ cl_device_id get_device() {
             printf("\nVendor Name: %s\nDevice Name: %s\nDevice Driver: %s\nMax Work Group Size: %u\n", vendor_name, device_name, device_driver, max_work_group_size);
             printf("Max Work Item Sizes: %u, %u, %u\n", max_work_item_size[0], max_work_item_size[1], max_work_item_size[2]);
             printf("Max Constant Buffer Size: %lu\n", max_constant_buf_size);
-
+            
             if (strcmp(vendor_name, "NVIDIA Corporation") == 0) {
                 printf("Appropriate Device Found!\n");
                 return devices[j];

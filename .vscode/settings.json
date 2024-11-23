@@ -14,6 +14,16 @@
         "stdio.h": "c",
         "*.cl": "cpp",
         "thread": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "*.tcc": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp",
+        "format": "cpp",
+        "__functional_base": "cpp",
+        "span": "cpp",
+        "chrono": "cpp"
     }
 }
