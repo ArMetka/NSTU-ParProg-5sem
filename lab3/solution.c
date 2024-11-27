@@ -38,9 +38,11 @@ int main(int argc, char **argv) {
                 answer_seq, answer_offset_seq, answer_len_seq, delta1,
                 answer_par, answer_offset_par, answer_len_par, delta2);
 
+    clReleaseDevice(device);
     if (primes) {
         free(primes);
     }
+
 
     return 0;
 }
@@ -193,10 +195,7 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
     clock_gettime(CLOCK_REALTIME, &start);
 
     max_work_group_size = 32;
-    // Local work size -> number of simultaneous executions (most likely 1024)
     size_t local_work_size[3] = {max_work_group_size, max_work_group_size, 1};
-    // Global work size -> total kernel executions
-    // size_t global_work_size = (primes_count / max_work_group_size + 1) * max_work_group_size;
     // [0] -> len: 2 - primes_count, offset: 0 - (primes_count - len)
     size_t primes_count_aligned = (primes_count / 32 + 1) * 32;
     size_t global_work_size[3] = {primes_count_aligned, primes_count_aligned, 1};
@@ -218,6 +217,18 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 *answe
 
     clock_gettime(CLOCK_REALTIME, &finish);
     delta_timespec(start, finish, &delta);
+
+    clReleaseContext(context);
+    clReleaseCommandQueue(queue);
+    clReleaseProgram(program);
+    clReleaseKernel(kernel);
+    clReleaseMemObject(lock_buf);
+    clReleaseMemObject(primes_buf);
+    clReleaseMemObject(primes_count_buf);
+    clReleaseMemObject(answer_buf);
+    clReleaseMemObject(answer_offset_buf);
+    clReleaseMemObject(answer_len_buf);
+    
     return delta;
 }
 
