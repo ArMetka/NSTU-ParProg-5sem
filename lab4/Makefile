@@ -1,5 +1,5 @@
-CC=gcc
-FLAGS=-std=c11
+CC=mpicc
+FLAGS=-std=c11 -DSERVER
 LFLAGS=
 MODULES_C=solution.c
 MODULES_O=$(MODULES_C:.c=.o)
@@ -7,7 +7,7 @@ SOLUTION_EXE=solution
 
 all: clean
 	make solution
-	./$(SOLUTION_EXE)
+	mpirun -use-hwthread-cpus ./$(SOLUTION_EXE)
 
 $(SOLUTION_EXE): $(MODULES_O)
 	$(CC) $(FLAGS) -o $@ $^ $(LFLAGS)

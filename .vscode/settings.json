@@ -24,6 +24,8 @@
         "format": "cpp",
         "__functional_base": "cpp",
         "span": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "solution.h": "c",
+        "mpi.h": "c"
     }
 }

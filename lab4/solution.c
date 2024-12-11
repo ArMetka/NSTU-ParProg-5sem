@@ -4,9 +4,32 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifndef SERVER
+#include <x86_64-linux-gnu/openmpi/mpi.h>
+#else
+#include <mpich-x86_64/mpi.h>
+#endif
+
 #include "solution.h"
 
 int main(int argc, char **argv) {
+    MPI_Init(&argc, &argv);
+
+    int num_tasks;
+    MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    int task_id;
+    MPI_Comm_rank(MPI_COMM_WORLD, &task_id);
+
+    // printf("task %d/%d!\n", task_id, num_tasks);
+    if (task_id != 0) {
+        goto par;
+    }
+
+    printf("\n------------------------------------------------------\n");
+
+    printf("MPI comm size (number of processes): %d", num_tasks);
+
     struct timespec delta1, delta2;
     uint64 *primes = NULL;
     uint64 primes_count = 0;
@@ -17,7 +40,7 @@ int main(int argc, char **argv) {
     
     printf("\nEnter the distance between \'twin\' prime numbers (N): ");
     scanf("%llu", &target_distance);
-    printf("\nEnter the prime numbers limit: ");
+    printf("Enter the prime numbers limit: ");
     scanf("%llu", &max_primes);
     find_primes(&primes, max_primes, &primes_count);
 
@@ -25,7 +48,13 @@ int main(int argc, char **argv) {
     uint64 answer1_par = 0, answer2_par = 0;
 
     delta1 = find_sequential(primes, primes_count, target_distance, &answer1_seq, &answer2_seq);
+par:
     delta2 = find_parallel(primes, primes_count, target_distance, &answer1_par, &answer2_par);
+
+    if (task_id != 0) {
+        MPI_Finalize();
+        return 0;
+    }
 
     printf("\n------------------------------------------------------\n");
 
@@ -35,6 +64,8 @@ int main(int argc, char **argv) {
         free(primes);
     }
 
+    MPI_Finalize();
+
     return 0;
 }
 
@@ -42,8 +73,6 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 target
     struct timespec start, finish, delta;
     printf("Computing in parallel...\n");
     clock_gettime(CLOCK_REALTIME, &start);
-
-
 
     clock_gettime(CLOCK_REALTIME, &finish);
     delta_timespec(start, finish, &delta);

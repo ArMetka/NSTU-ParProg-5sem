@@ -38,11 +38,11 @@ cd lab3
 make
 ```
 
-### Lab 3
+### Lab 4
 
 #### MPI
 
 ```bash
-cd lab3
+cd lab4
 make
 ```
