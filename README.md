@@ -1,4 +1,4 @@
-# NSTU Parallel Programming 5 semester
+# NSTU Parallel Programming 5th semester
 
 ### Lab 1
 
@@ -32,6 +32,15 @@ make
 ### Lab 3
 
 #### OpenCL
+
+```bash
+cd lab3
+make
+```
+
+### Lab 3
+
+#### MPI
 
 ```bash
 cd lab3
