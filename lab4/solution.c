@@ -5,7 +5,7 @@
 #include <time.h>
 
 #ifndef SERVER
-#include <x86_64-linux-gnu/openmpi/mpi.h>
+#include <x86_64-linux-gnu/mpi/mpi.h>
 #else
 #include <mpich-x86_64/mpi.h>
 #endif
@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
     if (task_id != 0) {
         goto par;
     }
-
     printf("\n------------------------------------------------------\n");
 
     printf("MPI comm size (number of processes): %d", num_tasks);
@@ -49,7 +48,12 @@ int main(int argc, char **argv) {
 
     delta1 = find_sequential(primes, primes_count, target_distance, &answer1_seq, &answer2_seq);
 par:
-    delta2 = find_parallel(primes, primes_count, target_distance, &answer1_par, &answer2_par);
+    if (task_id == 0) {
+        delta2 = find_parallel(primes, primes_count, target_distance, &answer1_par, &answer2_par);
+    } else {
+        MPI_Recv();
+        // do smth
+    }
 
     if (task_id != 0) {
         MPI_Finalize();
@@ -73,6 +77,35 @@ struct timespec find_parallel(uint64 *primes, uint64 primes_count, uint64 target
     struct timespec start, finish, delta;
     printf("Computing in parallel...\n");
     clock_gettime(CLOCK_REALTIME, &start);
+
+    int num_tasks;
+    MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    int flag = 1;
+    *answer1 = *answer2 = 0;
+    for (int i = 0; (i < primes_count - 1) && (flag); i++) {
+        if (*answer1 == 0) {
+            if (primes[i + 1] - primes[i] == 2) {
+                *answer1 = i;
+            }
+        } else if (*answer2 == 0) {
+            if (primes[i + 1] - primes[i] == 2) {
+                *answer2 = i;
+            }
+        } else {
+            if (uint64_avg(primes[*answer2], primes[*answer2 + 1]) -
+                uint64_avg(primes[*answer1], primes[*answer1 + 1]) >= target_distance) {
+                    flag = 0;
+                } else {
+                    *answer1 = *answer2 = 0;
+                    i -= 2;
+                }
+        }
+    }
+
+    if (flag) {
+        *answer1 = *answer2 = 0;
+    }
 
     clock_gettime(CLOCK_REALTIME, &finish);
     delta_timespec(start, finish, &delta);
