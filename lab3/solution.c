@@ -329,6 +329,7 @@ cl_device_id get_device() {
             size_t vendor_name_len;
             size_t device_name_len;
             size_t device_driver_len;
+            cl_ulong max_alloc_size = 0;
 
             cl_int info_result = clGetDeviceInfo(devices[j], CL_DEVICE_VENDOR, 128, vendor_name, &vendor_name_len);
             if (info_result != CL_SUCCESS) return NULL;
@@ -342,10 +343,13 @@ cl_device_id get_device() {
             if (info_result != CL_SUCCESS) return NULL;
             info_result = clGetDeviceInfo(devices[j], CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(size_t), &max_constant_buf_size, NULL);
             if (info_result != CL_SUCCESS) return NULL;
+            info_result = clGetDeviceInfo(devices[j], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(cl_ulong), &max_alloc_size, NULL);
+            if (info_result != CL_SUCCESS) return NULL;
 
             printf("\nVendor Name: %s\nDevice Name: %s\nDevice Driver: %s\nMax Work Group Size: %u\n", vendor_name, device_name, device_driver, max_work_group_size);
             printf("Max Work Item Sizes: %u, %u, %u\n", max_work_item_size[0], max_work_item_size[1], max_work_item_size[2]);
             printf("Max Constant Buffer Size: %lu\n", max_constant_buf_size);
+            printf("Max Allocation Size: %llu\n", max_alloc_size);
             
             if (strcmp(vendor_name, "NVIDIA Corporation") == 0) {
                 printf("Appropriate Device Found!\n");
