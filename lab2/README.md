@@ -29,7 +29,7 @@ make generator
 make solution
 ```
 
-- Рекурсивный алгоритм (Compute Capability 3.5+)
+- Рекурсивный алгоритм ([Compute Capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) 3.5+)
 ```bash
 make recursive
 ```

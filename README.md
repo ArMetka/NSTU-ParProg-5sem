@@ -2,6 +2,8 @@
 
 ### Lab 1
 
+> More info at lab1/README.md
+
 #### OpenMP
 
 ```bash
@@ -10,6 +12,8 @@ make
 ```
 
 ### Lab 2
+
+> More info at lab2/README.md
 
 #### NVIDIA CUDA
 
@@ -31,18 +35,11 @@ make
 
 ### Lab 3
 
+> More info at lab3/README.md
+
 #### OpenCL
 
 ```bash
 cd lab3
-make
-```
-
-### Lab 4
-
-#### MPI
-
-```bash
-cd lab4
 make
 ```
